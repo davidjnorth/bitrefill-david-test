@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 
 type BitrefillOptions = {
     apiKey: string;
@@ -10,11 +10,11 @@ const BASE_URL = 'https://api-bitrefill.com/v2';
 export interface FetchProductsOptions {
     start?: number;
     limit?: number;
-    include_test_products?: boolean;
+    includeTestProducts?: boolean;
 };
 
 export interface FetchAllProductsOptions {
-    include_test_products?: boolean;
+    includeTestProducts?: boolean;
 }
 
 export interface Product {
@@ -43,8 +43,9 @@ export interface Product {
 export interface ProductsMeta {
     start: number;
     limit: number;
-    include_out_of_stock: boolean;
+    include_test_products: boolean;
     _endpoint: string;
+    _next: string;
 }
 
 export interface ProductsResponse {
@@ -70,7 +71,8 @@ interface InvoiceProduct {
 
 interface CreateInvoiceRequest {
     products: InvoiceProduct[];
-    paymentMethod: 'autoBalancePayment' | 'triggerBalancePayment' | 'bitcoinPayment';
+    paymentType: 'autoBalancePayment' | 'triggerBalancePayment' | 'bitcoinPayment';
+    waitForCompletion?: boolean;
 }
 
 interface UserData {
@@ -132,7 +134,11 @@ class Bitrefill {
         try {
             const response = await axios.get<ProductsResponse>(`${BASE_URL}/products`, {
                 headers: this.getHeaders(),
-                params: options
+                params: {
+                    limit: options?.limit,
+                    start: options?.start,
+                    include_test_products: options?.includeTestProducts,
+                }
             });
             
             if (response.status != 200) {
@@ -160,7 +166,7 @@ class Bitrefill {
                 const products = await this.fetchProducts({
                     start,
                     limit,
-                    include_test_products: options?.include_test_products,
+                    includeTestProducts: options?.includeTestProducts,
                 });
                 
                 allProducts.push(...products); // Add fetched products to the allProducts array
@@ -181,23 +187,101 @@ class Bitrefill {
         return allProducts;
     }
 
-    async accountBalance(): Promise<AccountBalance> {
-        const response = await axios.get<AccountBalanceResponse>(`${BASE_URL}/accounts/balance`, {
-            headers: this.getHeaders(),
-        });
+    async fetchAllProducts2(options?: FetchAllProductsOptions): Promise<Product[]> {
+        const allProducts: Product[] = [];
+        let nextUrl: string | null = `${BASE_URL}/products`; // Start from the first page
         
-        if (response.status != 200) {
-            throw new Error(`API responded with status code ${response.status}: ${response.statusText}`);
-        }
+        do {
+          try {
+            const response: AxiosResponse<ProductsResponse> = await axios.get<ProductsResponse>(nextUrl, {
+                headers: this.getHeaders(),
+                params: {
+                    include_test_products: options?.includeTestProducts,
+                }
+            });
+      
+            allProducts.push(...response.data.data);
+            
+            const rateLimitRemaining = Number(response.headers['ratelimit-remaining']);
+            const rateLimitReset = Number(response.headers['ratelimit-reset']) * 1000; // Convert to milliseconds
+            
+            if (rateLimitRemaining === 0) {
+              const currentTime = Date.now();
+              
+              if (rateLimitReset > currentTime) {
+                // If rate limit is exhausted, wait until it resets
+                await new Promise(res => setTimeout(res, rateLimitReset));
+              }
+            }
+            
+            // Determine the next URL. If no _next property, stop pagination.
+            nextUrl = response.data.meta._next ?? null;
+          } catch (error) {
+            console.error('Error fetching products:', error);
+            throw error; // Or you might decide to break the loop instead of throwing an error, based on your use case
+          }
+        } while (nextUrl);
         
-        return response.data.data;
+        return allProducts;
     }
+
+    // async fetchAllProducts3(options?: FetchAllProductsOptions): Promise<Product[]> {
+    //     const allProducts: Product[] = [];
+    //     const limit = 50;
+        
+    //     let start = 0;
+    //     let hasMore = true;
+        
+    //     while (hasMore) {
+    //         try {
+    //             const promises: Promise<AxiosResponse<ProductsResponse>>[] = [];
+    
+    //             for (let i = 0; i < 10; i++) { // Assuming 10 as an example for the number of parallel requests
+    //                 promises.push(
+    //                     axios.get<ProductsResponse>(`${BASE_URL}/products`, {
+    //                         headers: this.getHeaders(),
+    //                         params: { start, limit, ...options },
+    //                     })
+    //                 );
+    //                 start += limit;
+    //             }
+    
+    //             // Await all parallel requests and handle rate limiting
+    //             const responses = await Promise.allSettled(promises);
+    //             for (const response of responses) {
+    //                 if (response.status === 'fulfilled') {
+    //                     allProducts.push(...response.value.data.data);
+    
+    //                     const rateLimitRemaining = Number(response.value.headers['x-ratelimit-remaining']);
+    //                     const rateLimitReset = Number(response.value.headers['x-ratelimit-reset']) * 1000;
+                        
+    //                     if (rateLimitRemaining === 0) {
+    //                         const currentTime = Date.now();
+    //                         const waitTime = rateLimitReset > currentTime ? rateLimitReset - currentTime : 0;
+    //                         await new Promise(res => setTimeout(res, waitTime));
+    //                     }
+    //                 } else {
+    //                     // Handle individual request error
+    //                     console.error('Error fetching products:', response.reason);
+    //                 }
+    //             }
+    
+    //             hasMore = responses.some(response => response.status === 'fulfilled' && response.value.data.data.length === limit);
+    //         } catch (error) {
+    //             console.error('Error fetching products:', error);
+    //             throw error;
+    //         }
+    //     }
+        
+    //     return allProducts;
+    // }
 
     async createInvoice(request: CreateInvoiceRequest): Promise<InvoiceResponseData> {
         try {
             const {
                 paymentType,
                 products,
+                waitForCompletion,
             } = request;
 
             const autoPay = paymentType === 'autoBalancePayment';
@@ -217,9 +301,44 @@ class Bitrefill {
             if (response.status != 200) {
                 throw new Error(`API responded with status code ${response.status}: ${response.statusText}`);
             }
-    
-            return response.data.data;
+
+            if (waitForCompletion && paymentType === 'autoBalancePayment') {
+                return await this.getCompletedInvoice(response.data.data.id);
+            } else {
+                return response.data.data;
+            }
         } catch (error) {
+            const message = (error as Error).message;
+            throw new Error(`Failed to create invoice: ${message}`);
+        }
+    }
+
+    async getCompletedInvoice(id: string): Promise<InvoiceResponseData> {
+        let invoice = await this.getInvoice(id);
+
+        for (let attempt = 0; attempt < 5 && invoice.status === 'not_delivered'; attempt++) {
+            // Wait for 1 second before trying again
+            await new Promise(res => setTimeout(res, 1000));
+            
+            // Re-fetch the invoice
+            invoice = await this.getInvoice(id);
+        }
+    
+        return invoice;
+    }
+
+    async getInvoice(id: string): Promise<InvoiceResponseData> {
+        try {
+            const response = await axios.get<InvoiceResponse>(`${BASE_URL}/invoices/${id}`, {
+                headers: this.getHeaders(),
+            });
+
+            if (response.status != 200) {
+                throw new Error(`API responded with status code ${response.status}: ${response.statusText}`);
+            }
+
+            return response.data.data;
+        } catch(error) {
             const message = (error as Error).message;
             throw new Error(`Failed to create invoice: ${message}`);
         }
