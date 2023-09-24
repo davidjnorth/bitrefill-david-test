@@ -112,7 +112,6 @@ interface InvoiceResponse {
     data: InvoiceResponseData;
 }
 
-
 class Bitrefill {
     private apiKey: string;
     private apiSecret: string;
@@ -330,6 +329,23 @@ class Bitrefill {
     async getInvoice(id: string): Promise<InvoiceResponseData> {
         try {
             const response = await axios.get<InvoiceResponse>(`${BASE_URL}/invoices/${id}`, {
+                headers: this.getHeaders(),
+            });
+
+            if (response.status != 200) {
+                throw new Error(`API responded with status code ${response.status}: ${response.statusText}`);
+            }
+
+            return response.data.data;
+        } catch(error) {
+            const message = (error as Error).message;
+            throw new Error(`Failed to create invoice: ${message}`);
+        }
+    }
+
+    async getAccountBalance(): Promise<AccountBalance> {
+        try {
+            const response = await axios.get<AccountBalanceResponse>(`${BASE_URL}/accounts/balance`, {
                 headers: this.getHeaders(),
             });
 
