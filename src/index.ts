@@ -1,116 +1,18 @@
 import axios, { AxiosResponse } from 'axios';
-
-type BitrefillOptions = {
-    apiKey: string;
-    apiSecret: string;
-}
+import {
+    AccountBalance,
+    AccountBalanceResponse,
+    BitrefillOptions,
+    CreateInvoiceRequest,
+    GetAllProductsOptions,
+    GetProductsOptions,
+    InvoiceResponse,
+    InvoiceResponseData,
+    Product,
+    ProductsResponse
+} from './types';
 
 const BASE_URL = 'https://api-bitrefill.com/v2';
-
-export interface FetchProductsOptions {
-    start?: number;
-    limit?: number;
-    includeTestProducts?: boolean;
-};
-
-export interface FetchAllProductsOptions {
-    includeTestProducts?: boolean;
-}
-
-export interface Product {
-    id: string;
-    name: string;
-    country_code: string;
-    country_name: string;
-    currency: string;
-    created_time: string;
-    recipient_type: string;
-    image: string;
-    in_stock: boolean;
-    packages: {
-        id: string;
-        value: string;
-        price: number;
-    }[];
-    range: {
-        min: number;
-        max: number;
-        step: number;
-        price_rate: number;
-    };
-};
-
-export interface ProductsMeta {
-    start: number;
-    limit: number;
-    include_test_products: boolean;
-    _endpoint: string;
-    _next: string;
-}
-
-export interface ProductsResponse {
-    meta: ProductsMeta;
-    data: Product[];
-}
-
-export interface AccountBalance {
-    balance: number;
-    currency: string;
-}
-
-export interface AccountBalanceResponse {
-    meta: any;
-    data: AccountBalance;
-}
-
-interface InvoiceProduct {
-    product_id: string;
-    value: number;
-    quantity: number;
-}
-
-interface CreateInvoiceRequest {
-    products: InvoiceProduct[];
-    paymentType: 'autoBalancePayment' | 'triggerBalancePayment' | 'bitcoinPayment';
-    waitForCompletion?: boolean;
-}
-
-interface UserData {
-    id: string;
-    email: string;
-}
-
-interface PaymentData {
-    method: string;
-    address: string;
-    currency: string;
-    price: number;
-    status: string;
-    commission: number;
-}
-
-interface OrderData {
-    id: string;
-    status: string;
-    product: InvoiceProduct & { name: string; image: string; _href: string };
-    created_time: string;
-    delivered_time: string;
-}
-
-interface InvoiceResponseData {
-    id: string;
-    created_time: string;
-    completed_time: string;
-    status: string;
-    user: UserData;
-    payment: PaymentData;
-    orders: OrderData[];
-}
-
-interface InvoiceResponse {
-    meta: any;
-    data: InvoiceResponseData;
-}
 
 class Bitrefill {
     private apiKey: string;
@@ -129,7 +31,7 @@ class Bitrefill {
         };
     }
 
-    async fetchProducts(options?: FetchProductsOptions): Promise<Product[]> {
+    async getProducts(options?: GetProductsOptions): Promise<Product[]> {
         try {
             const response = await axios.get<ProductsResponse>(`${BASE_URL}/products`, {
                 headers: this.getHeaders(),
@@ -151,7 +53,7 @@ class Bitrefill {
         }
     }
 
-    async fetchAllProducts(options?: FetchAllProductsOptions): Promise<Product[]> {
+    async getAllProducts(options?: GetAllProductsOptions): Promise<Product[]> {
         const allProducts: Product[] = [];
         const limit = 50;
         // TODO: Look into rate limiting
@@ -162,7 +64,7 @@ class Bitrefill {
         
         while (hasMore) {
             try {
-                const products = await this.fetchProducts({
+                const products = await this.getProducts({
                     start,
                     limit,
                     includeTestProducts: options?.includeTestProducts,
@@ -186,7 +88,7 @@ class Bitrefill {
         return allProducts;
     }
 
-    async fetchAllProducts2(options?: FetchAllProductsOptions): Promise<Product[]> {
+    async getAllProducts2(options?: GetAllProductsOptions): Promise<Product[]> {
         const allProducts: Product[] = [];
         let nextUrl: string | null = `${BASE_URL}/products`; // Start from the first page
         
@@ -224,7 +126,7 @@ class Bitrefill {
         return allProducts;
     }
 
-    // async fetchAllProducts3(options?: FetchAllProductsOptions): Promise<Product[]> {
+    // async getAllProducts3(options?: GetAllProductsOptions): Promise<Product[]> {
     //     const allProducts: Product[] = [];
     //     const limit = 50;
         
