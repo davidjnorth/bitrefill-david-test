@@ -69,6 +69,7 @@ export interface CreateInvoiceRequest {
   products: InvoiceProduct[];
   paymentType: 'autoBalancePayment' | 'triggerBalancePayment' | 'bitcoinPayment';
   waitForCompletion?: boolean;
+  refundAddress?: string;
 }
 
 export interface UserData {

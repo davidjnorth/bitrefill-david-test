@@ -56,31 +56,59 @@ class Bitrefill {
     async getAllProducts(options?: GetAllProductsOptions): Promise<Product[]> {
         const allProducts: Product[] = [];
         const limit = 50;
-        // TODO: Look into rate limiting
-        // TODO: Maybe use next in metadata but need API access to see what it looks like
+        const batchSize = 10;
         
         let start = 0;
         let hasMore = true;
         
         while (hasMore) {
             try {
-                const products = await this.getProducts({
-                    start,
-                    limit,
-                    includeTestProducts: options?.includeTestProducts,
-                });
-                
-                allProducts.push(...products); // Add fetched products to the allProducts array
-                
-                if (products.length < limit) {
-                    hasMore = false; // Stop fetching more products if the number of fetched products is less than the limit
-                } else {
-                    start += limit; // Move to the next page
-                    // if (delay > 0) await new Promise(res => setTimeout(res, delay)); // Introduce delay between API calls if specified
+                const promises: Promise<AxiosResponse<ProductsResponse>>[] = [];
+    
+                for (let i = 0; i < batchSize; i++) {
+                    promises.push(
+                        axios.get<ProductsResponse>(`${BASE_URL}/products`, {
+                            headers: this.getHeaders(),
+                            params: { start, limit, ...options },
+                        })
+                    );
+                    start += limit;
                 }
+    
+                // Await all parallel requests and handle rate limiting
+                const responses = await Promise.allSettled(promises);
+                let lowestRateLimitRemaining: number = 500;
+                let lowestRateLimitReset: number = 500;
+                for (const response of responses) {
+                    if (response.status === 'fulfilled') {
+                        allProducts.push(...response.value.data.data);
+    
+                        const rateLimitRemaining = Number(response.value.headers['ratelimit-remaining']);
+                        const rateLimitReset = Number(response.value.headers['ratelimit-reset']) * 1000;
+                        
+                        if (rateLimitRemaining < lowestRateLimitRemaining) {
+                            lowestRateLimitRemaining = rateLimitRemaining;
+                            lowestRateLimitReset = rateLimitReset;
+                        }
+                    } else {
+                        // Handle individual request error
+                        // A bit of a hack for now because of cloudflare limits
+                        if (response.reason.response.status != 429) {
+                            console.error('Error fetching products:', response.reason);
+                        }
+                    }
+                }
+
+                if (lowestRateLimitRemaining < batchSize) {
+                    await new Promise(res => setTimeout(res, lowestRateLimitReset));
+                    // Increase rate lowset limit variables back to high default value
+                    lowestRateLimitRemaining = 500;
+                    lowestRateLimitReset = 500;
+                }
+    
+                hasMore = responses.some(response => response.status === 'fulfilled' && response.value.data.data.length === limit);
             } catch (error) {
-                // Handle errors (like logging them), or rethrow them if you want to stop fetching on errors
-                console.error(`Error fetching products with start=${start}:`, error);
+                console.error('Error fetching products:', error);
                 throw error;
             }
         }
@@ -88,102 +116,18 @@ class Bitrefill {
         return allProducts;
     }
 
-    async getAllProducts2(options?: GetAllProductsOptions): Promise<Product[]> {
-        const allProducts: Product[] = [];
-        let nextUrl: string | null = `${BASE_URL}/products`; // Start from the first page
-        
-        do {
-          try {
-            const response: AxiosResponse<ProductsResponse> = await axios.get<ProductsResponse>(nextUrl, {
-                headers: this.getHeaders(),
-                params: {
-                    include_test_products: options?.includeTestProducts,
-                }
-            });
-      
-            allProducts.push(...response.data.data);
-            
-            const rateLimitRemaining = Number(response.headers['ratelimit-remaining']);
-            const rateLimitReset = Number(response.headers['ratelimit-reset']) * 1000; // Convert to milliseconds
-            
-            if (rateLimitRemaining === 0) {
-              const currentTime = Date.now();
-              
-              if (rateLimitReset > currentTime) {
-                // If rate limit is exhausted, wait until it resets
-                await new Promise(res => setTimeout(res, rateLimitReset));
-              }
-            }
-            
-            // Determine the next URL. If no _next property, stop pagination.
-            nextUrl = response.data.meta._next ?? null;
-          } catch (error) {
-            console.error('Error fetching products:', error);
-            throw error; // Or you might decide to break the loop instead of throwing an error, based on your use case
-          }
-        } while (nextUrl);
-        
-        return allProducts;
-    }
-
-    // async getAllProducts3(options?: GetAllProductsOptions): Promise<Product[]> {
-    //     const allProducts: Product[] = [];
-    //     const limit = 50;
-        
-    //     let start = 0;
-    //     let hasMore = true;
-        
-    //     while (hasMore) {
-    //         try {
-    //             const promises: Promise<AxiosResponse<ProductsResponse>>[] = [];
-    
-    //             for (let i = 0; i < 10; i++) { // Assuming 10 as an example for the number of parallel requests
-    //                 promises.push(
-    //                     axios.get<ProductsResponse>(`${BASE_URL}/products`, {
-    //                         headers: this.getHeaders(),
-    //                         params: { start, limit, ...options },
-    //                     })
-    //                 );
-    //                 start += limit;
-    //             }
-    
-    //             // Await all parallel requests and handle rate limiting
-    //             const responses = await Promise.allSettled(promises);
-    //             for (const response of responses) {
-    //                 if (response.status === 'fulfilled') {
-    //                     allProducts.push(...response.value.data.data);
-    
-    //                     const rateLimitRemaining = Number(response.value.headers['x-ratelimit-remaining']);
-    //                     const rateLimitReset = Number(response.value.headers['x-ratelimit-reset']) * 1000;
-                        
-    //                     if (rateLimitRemaining === 0) {
-    //                         const currentTime = Date.now();
-    //                         const waitTime = rateLimitReset > currentTime ? rateLimitReset - currentTime : 0;
-    //                         await new Promise(res => setTimeout(res, waitTime));
-    //                     }
-    //                 } else {
-    //                     // Handle individual request error
-    //                     console.error('Error fetching products:', response.reason);
-    //                 }
-    //             }
-    
-    //             hasMore = responses.some(response => response.status === 'fulfilled' && response.value.data.data.length === limit);
-    //         } catch (error) {
-    //             console.error('Error fetching products:', error);
-    //             throw error;
-    //         }
-    //     }
-        
-    //     return allProducts;
-    // }
-
     async createInvoice(request: CreateInvoiceRequest): Promise<InvoiceResponseData> {
         try {
             const {
                 paymentType,
                 products,
                 waitForCompletion,
+                refundAddress,
             } = request;
+
+            if (paymentType == 'bitcoinPayment' && !refundAddress) {
+                throw new Error('refundAddress is required for a bitcoin invoice');
+            }
 
             const autoPay = paymentType === 'autoBalancePayment';
             let paymentMethod = 'balance';
@@ -193,6 +137,7 @@ class Bitrefill {
                 products,
                 auto_pay: autoPay,
                 payment_method: paymentMethod,
+                refund_address: refundAddress,
             };
 
             const response = await axios.post<InvoiceResponse>(`${BASE_URL}/invoices`, payload, {
