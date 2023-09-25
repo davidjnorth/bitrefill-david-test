@@ -8,6 +8,7 @@ const client = Bitrefill({
     apiSecret: process.env.API_SECRET ?? ''
 });
 
+// Get products with filters, log product names
 async function runGetProducts() {
     try {
         const products = await client.getProducts({
@@ -24,6 +25,7 @@ async function runGetProducts() {
     }
 }
 
+// Get all products with filters, abstract pagination, log product names
 async function runGetAllProducts() {
     try {
         const products = await client.getAllProducts({
@@ -38,6 +40,7 @@ async function runGetAllProducts() {
     }
 }
 
+// Create bitcoin invoice (incomplete), log invoice data
 async function runCreateBitcoinInvoice() {
   try {
       const invoiceData = await client.createInvoice({
@@ -52,6 +55,7 @@ async function runCreateBitcoinInvoice() {
   }
 }
 
+// Create auto balance invoice, wait for completion, log redemption code
 async function runCreateInvoice() {
     try {
         const invoiceData = await client.createInvoice({
@@ -70,6 +74,7 @@ async function runCreateInvoice() {
     }
 }
 
+// Create triggered balance invoice, wait for completion, failed delivery, log complete invoice data with failed status
 async function runCreateInvoiceFail() {
     try {
         const invoiceData = await client.createInvoice({
@@ -84,6 +89,7 @@ async function runCreateInvoiceFail() {
     }
 }
 
+// Get account balance, log balance object with currency and balance
 async function runGetAccountBalance() {
     try {
         const accounBalance = await client.getAccountBalance();
@@ -106,7 +112,7 @@ async function runGetAccountBalance() {
 // Create balance invoice, wait for completion, log redemption code
 // runCreateInvoice();
 
-// Create balance invoice, wait for completion, failed delivery, log complete invoice data
+// Create triggered balance invoice, wait for completion, failed delivery, log complete invoice data with failed status
 // runCreateInvoiceFail();
 
 // Get account balance, log balance object with currency and balance

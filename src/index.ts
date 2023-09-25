@@ -77,8 +77,8 @@ class Bitrefill {
     
                 // Await all parallel requests and handle rate limiting
                 const responses = await Promise.allSettled(promises);
-                let lowestRateLimitRemaining: number = 500;
-                let lowestRateLimitReset: number = 500;
+                let lowestRateLimitRemaining: number = Infinity;
+                let lowestRateLimitReset: number = Infinity;
                 for (const response of responses) {
                     if (response.status === 'fulfilled') {
                         allProducts.push(...response.value.data.data);
@@ -101,9 +101,6 @@ class Bitrefill {
 
                 if (lowestRateLimitRemaining < batchSize) {
                     await new Promise(res => setTimeout(res, lowestRateLimitReset));
-                    // Increase rate lowset limit variables back to high default value
-                    lowestRateLimitRemaining = 500;
-                    lowestRateLimitReset = 500;
                 }
     
                 hasMore = responses.some(response => response.status === 'fulfilled' && response.value.data.data.length === limit);

@@ -67,19 +67,19 @@ Edit the bottom of the demo.ts file to uncomment the function you want to run.
 
 ```
 // Get products with filters, log product names
-runGetProducts();
+// runGetProducts();
 
 // Get all products with filters, abstract pagination, log product names
-runGetAllProducts();
+// runGetAllProducts();
 
 // Create bitcoin invoice (incomplete), log invoice data
-runCreateBitcoinInvoice();
+// runCreateBitcoinInvoice();
 
 // Create balance invoice, wait for completion, log redemption code
-runCreateInvoice();
+// runCreateInvoice();
 
-// Create balance invoice, wait for completion, failed delivery, log complete invoice data
-runCreateInvoiceFail();
+// Create triggered balance invoice, wait for completion, failed delivery, log complete invoice data with failed status
+// runCreateInvoiceFail();
 
 // Get account balance, log balance object with currency and balance
 runGetAccountBalance();
