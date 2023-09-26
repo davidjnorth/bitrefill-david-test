@@ -31,6 +31,7 @@ const products = await client.getAllProducts({
 ```
 
 ### Invoices
+
 ```
 const invoice = await client.createInvoice({
     products: [{ product_id: 'test-gift-card-code', value: 10, quantity: 1 }],
@@ -51,6 +52,10 @@ const invoiceData = await client.createInvoice({
     products: [{ product_id: 'test-gift-card-code', value: 10, quantity: 1 }],
     paymentType: 'triggeredBalancePayment'
 });
+```
+
+```
+const invoice = await client.getInvoice(id);
 ```
 
 ### Account Balance
@@ -83,6 +88,9 @@ runCreateBitcoinInvoice();
 
 // Get account balance, log balance object with currency and balance
 runGetAccountBalance();
+
+// Get invoice for a given id
+runGetInvoice('00e75a5b-1093-48ac-ac60-4022c18b3112');
 ```
 
 Run the demo file.

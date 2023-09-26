@@ -100,6 +100,18 @@ async function runGetAccountBalance() {
     }
 }
 
+// Get invoice for a given id
+async function runGetInvoice(id: string) {
+    try {
+        const invoice = await client.getInvoice(id);
+        
+        console.log(invoice);
+    } catch (error) {
+        console.error('Error getting account balance:', error);
+    }
+}
+
+
 // Get all products with filters, abstract pagination, log product names
 // runGetAllProducts();
 
@@ -116,4 +128,7 @@ async function runGetAccountBalance() {
 // runCreateBitcoinInvoice();
 
 // Get account balance, log balance object with currency and balance
-runGetAccountBalance();
+// runGetAccountBalance();
+
+// Get invoice for a given id, log invoice
+runGetInvoice('00e75a5b-1093-48ac-ac60-4022c18b3112');
