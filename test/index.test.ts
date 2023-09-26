@@ -129,22 +129,22 @@ describe('Bitrefill API Client', () => {
 
   test('should throw error when fetching account balance fails', async () => {
     mockedAxios.get.mockRejectedValueOnce(new Error('Network Error'));
-    await expect(client.getAccountBalance()).rejects.toThrow('Failed to create invoice: Network Error');
+    await expect(client.getAccountBalance()).rejects.toThrow('Failed to get account balance: Network Error');
   });
 
   test('should get a single invoice successfully', async () => {
     mockedAxios.get.mockResolvedValueOnce({
       status: 200,
-      data: { data: { id: 'invoice_id', status: 'delivered' } },
+      data: { data: { id: 'invoice_id', status: 'all_delivered' } },
     });
 
     const invoice = await client.getInvoice('invoice_id');
-    expect(invoice).toEqual({ id: 'invoice_id', status: 'delivered' });
+    expect(invoice).toEqual({ id: 'invoice_id', status: 'all_delivered' });
   });
 
   test('should throw error when fetching an invoice fails', async () => {
     mockedAxios.get.mockRejectedValueOnce(new Error('Network Error'));
-    await expect(client.getInvoice('invoice_id')).rejects.toThrow('Failed to create invoice: Network Error');
+    await expect(client.getInvoice('invoice_id')).rejects.toThrow('Failed to get invoice: Network Error');
   });
 
 });

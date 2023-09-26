@@ -105,7 +105,7 @@ class Bitrefill {
                     await new Promise(res => setTimeout(res, lowestRateLimitReset));
                 }
             } catch (error) {
-                console.error('Error fetching products:', error);
+                console.error('Error fetching all products:', error);
                 throw error;
             }
         }
@@ -183,7 +183,7 @@ class Bitrefill {
             return response.data.data;
         } catch(error) {
             const message = (error as Error).message;
-            throw new Error(`Failed to create invoice: ${message}`);
+            throw new Error(`Failed to get invoice: ${message}`);
         }
     }
 
@@ -200,7 +200,7 @@ class Bitrefill {
             return response.data.data;
         } catch(error) {
             const message = (error as Error).message;
-            throw new Error(`Failed to create invoice: ${message}`);
+            throw new Error(`Failed to get account balance: ${message}`);
         }
     }
 }
