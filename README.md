@@ -89,3 +89,12 @@ Run the demo file.
 ```
 npx ts-node demo.ts
 ```
+
+
+## Tests
+Tests do not cover all edge cases but are at a decent starting point.
+
+Run tests
+```
+npm test
+```

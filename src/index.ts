@@ -93,17 +93,17 @@ class Bitrefill {
                     } else {
                         // Handle individual request error
                         // A bit of a hack for now because of cloudflare limits
-                        if (response.reason.response.status != 429) {
+                        if (response.reason.response && response.reason.response.status != 429) {
                             console.error('Error fetching products:', response.reason);
                         }
                     }
                 }
 
-                if (lowestRateLimitRemaining < batchSize) {
+                hasMore = responses.every(response => response.status === 'fulfilled' && response.value.data.data.length === limit);
+
+                if (hasMore && lowestRateLimitRemaining < batchSize) {
                     await new Promise(res => setTimeout(res, lowestRateLimitReset));
                 }
-    
-                hasMore = responses.some(response => response.status === 'fulfilled' && response.value.data.data.length === limit);
             } catch (error) {
                 console.error('Error fetching products:', error);
                 throw error;
