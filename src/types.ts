@@ -60,12 +60,12 @@ export interface AccountBalanceResponse {
 }
 
 export interface InvoiceProduct {
-  product_id: string;
+  productId: string;
   value: number;
   quantity: number;
 }
 
-export interface CreateInvoiceRequest {
+export interface CreateInvoiceOptions {
   products: InvoiceProduct[];
   paymentType: 'autoBalancePayment' | 'triggerBalancePayment' | 'bitcoinPayment';
   waitForCompletion?: boolean;

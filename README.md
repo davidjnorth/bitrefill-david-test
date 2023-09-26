@@ -34,7 +34,7 @@ const products = await client.getAllProducts({
 
 ```
 const invoice = await client.createInvoice({
-    products: [{ product_id: 'test-gift-card-code', value: 10, quantity: 1 }],
+    products: [{ productId: 'test-gift-card-code', value: 10, quantity: 1 }],
     paymentType: 'autoBalancePayment',
     waitForCompletion: true
 });
@@ -42,14 +42,14 @@ const invoice = await client.createInvoice({
 
 ```
 const invoice = await client.createInvoice({
-    products: [{ product_id: 'test-gift-card-code', value: 10, quantity: 1 }],
+    products: [{ productId: 'test-gift-card-code', value: 10, quantity: 1 }],
     paymentType: 'bitcoinPayment'
 });
 ```
 
 ```
 const invoiceData = await client.createInvoice({
-    products: [{ product_id: 'test-gift-card-code', value: 10, quantity: 1 }],
+    products: [{ productId: 'test-gift-card-code', value: 10, quantity: 1 }],
     paymentType: 'triggeredBalancePayment'
 });
 ```

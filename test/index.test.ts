@@ -83,7 +83,7 @@ describe('Bitrefill API Client', () => {
 
     const invoice = await client.createInvoice({
       paymentType: 'autoBalancePayment',
-      products: [{ product_id: 'product_1', value: 10, quantity: 1 }],
+      products: [{ productId: 'product_1', value: 10, quantity: 1 }],
       waitForCompletion: false,
     });
 
@@ -102,7 +102,7 @@ describe('Bitrefill API Client', () => {
 
     const invoice = await client.createInvoice({
       paymentType: 'autoBalancePayment',
-      products: [{ product_id: 'product_1', value: 10, quantity: 1 }],
+      products: [{ productId: 'product_1', value: 10, quantity: 1 }],
       waitForCompletion: true,
     });
 
@@ -113,7 +113,7 @@ describe('Bitrefill API Client', () => {
     mockedAxios.post.mockRejectedValueOnce(new Error('Network Error'));
     await expect(client.createInvoice({
       paymentType: 'autoBalancePayment',
-      products: [{ product_id: 'product_1', value: 10, quantity: 1 }],
+      products: [{ productId: 'product_1', value: 10, quantity: 1 }],
     })).rejects.toThrow('Failed to create invoice: Network Error');
   });
 

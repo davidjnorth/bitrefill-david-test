@@ -3,7 +3,7 @@ import {
     AccountBalance,
     AccountBalanceResponse,
     BitrefillOptions,
-    CreateInvoiceRequest,
+    CreateInvoiceOptions,
     GetAllProductsOptions,
     GetProductsOptions,
     InvoiceResponse,
@@ -113,7 +113,7 @@ class Bitrefill {
         return allProducts;
     }
 
-    async createInvoice(request: CreateInvoiceRequest): Promise<InvoiceResponseData> {
+    async createInvoice(request: CreateInvoiceOptions): Promise<InvoiceResponseData> {
         try {
             const {
                 paymentType,
@@ -126,12 +126,18 @@ class Bitrefill {
                 throw new Error('refundAddress is required for a bitcoin invoice');
             }
 
+            const productsPayload = products.map(product => ({
+                product_id: product.productId,
+                value: product.value,
+                quantity: product.quantity
+            }));
+
             const autoPay = paymentType === 'autoBalancePayment';
             let paymentMethod = 'balance';
             if (paymentType == 'bitcoinPayment') { paymentMethod = 'bitcoin' };
 
             const payload = {
-                products,
+                products: productsPayload,
                 auto_pay: autoPay,
                 payment_method: paymentMethod,
                 refund_address: refundAddress,

@@ -44,7 +44,7 @@ async function runGetAllProducts() {
 async function runCreateBitcoinInvoice() {
   try {
       const invoiceData = await client.createInvoice({
-          products: [{ product_id: 'test-gift-card-code', value: 10, quantity: 1 }],
+          products: [{ productId: 'test-gift-card-code', value: 10, quantity: 1 }],
           paymentType: 'bitcoinPayment',
           refundAddress: 'bc1234567890'
       });
@@ -59,7 +59,7 @@ async function runCreateBitcoinInvoice() {
 async function runCreateInvoice() {
     try {
         const invoiceData = await client.createInvoice({
-            products: [{ product_id: 'test-gift-card-code', value: 10, quantity: 1 }],
+            products: [{ productId: 'test-gift-card-code', value: 10, quantity: 1 }],
             paymentType: 'autoBalancePayment',
             waitForCompletion: true
         });
@@ -78,7 +78,7 @@ async function runCreateInvoice() {
 async function runCreateInvoiceFail() {
     try {
         const invoiceData = await client.createInvoice({
-            products: [{ product_id: 'test-phone-refill-fail', value: 10, quantity: 1 }],
+            products: [{ productId: 'test-phone-refill-fail', value: 10, quantity: 1 }],
             paymentType: 'autoBalancePayment',
             waitForCompletion: true
         });
@@ -131,4 +131,4 @@ async function runGetInvoice(id: string) {
 // runGetAccountBalance();
 
 // Get invoice for a given id, log invoice
-runGetInvoice('00e75a5b-1093-48ac-ac60-4022c18b3112');
+// runGetInvoice('00e75a5b-1093-48ac-ac60-4022c18b3112');
