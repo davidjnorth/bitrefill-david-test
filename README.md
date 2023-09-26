@@ -66,20 +66,20 @@ npm run build
 Edit the bottom of the demo.ts file to uncomment the function you want to run.
 
 ```
-// Get products with filters, log product names
-// runGetProducts();
-
 // Get all products with filters, abstract pagination, log product names
-// runGetAllProducts();
-
-// Create bitcoin invoice (incomplete), log invoice data
-// runCreateBitcoinInvoice();
+runGetAllProducts();
 
 // Create balance invoice, wait for completion, log redemption code
-// runCreateInvoice();
+runCreateInvoice();
 
 // Create triggered balance invoice, wait for completion, failed delivery, log complete invoice data with failed status
-// runCreateInvoiceFail();
+runCreateInvoiceFail();
+
+// Get products with filters, log product names
+runGetProducts();
+
+// Create bitcoin invoice (incomplete), log invoice data
+runCreateBitcoinInvoice();
 
 // Get account balance, log balance object with currency and balance
 runGetAccountBalance();

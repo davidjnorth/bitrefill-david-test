@@ -12,7 +12,7 @@ const client = Bitrefill({
 async function runGetProducts() {
     try {
         const products = await client.getProducts({
-            includeTestProducts: false,
+            includeTestProducts: true,
             limit: 50,
             start: 0
         });
@@ -100,20 +100,20 @@ async function runGetAccountBalance() {
     }
 }
 
-// Get products with filters, log product names
-// runGetProducts();
-
 // Get all products with filters, abstract pagination, log product names
 // runGetAllProducts();
-
-// Create bitcoin invoice (incomplete), log invoice data
-// runCreateBitcoinInvoice();
 
 // Create balance invoice, wait for completion, log redemption code
 // runCreateInvoice();
 
 // Create triggered balance invoice, wait for completion, failed delivery, log complete invoice data with failed status
 // runCreateInvoiceFail();
+
+// Get products with filters, log product names
+// runGetProducts();
+
+// Create bitcoin invoice (incomplete), log invoice data
+// runCreateBitcoinInvoice();
 
 // Get account balance, log balance object with currency and balance
 runGetAccountBalance();
