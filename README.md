@@ -32,6 +32,11 @@ const products = await client.getAllProducts({
 
 ### Invoices
 
+Use `waitForComplettion: true` on `client.createInvoice()` to wait for the invoice to complete before getting a responnse.
+
+Payment types:
+`paymentType: 'autoBalancePayment' | 'triggerBalancePayment' | 'bitcoinPayment'`
+
 ```
 const invoice = await client.createInvoice({
     products: [{ product_id: 'test-gift-card-code', value: 10, quantity: 1 }],
