@@ -115,3 +115,5 @@ npm test
 ## Notes
 
 As the project grows it will make sense to split out the code into seperate modules.
+
+The API uses snake case, so I made the responses remain in snake case but the options for the package functions are in camel case. So when the user uses this package the variables they pass in are in camel case and the API response remains in snake case. This may need to be looked at, but for now this is how it works.
