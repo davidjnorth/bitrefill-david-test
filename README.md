@@ -32,7 +32,7 @@ const products = await client.getAllProducts({
 
 ### Invoices
 
-Use `waitForComplettion: true` on `client.createInvoice()` to wait for the invoice to complete before getting a responnse.
+Use `waitForComplettion: true` on `client.createInvoice()` to wait for the invoice to complete before getting a response.
 
 Payment types:
 `paymentType: 'autoBalancePayment' | 'triggerBalancePayment' | 'bitcoinPayment'`
@@ -111,3 +111,7 @@ Run tests
 ```
 npm test
 ```
+
+## Notes
+
+As the project grows it will make sense to split out the code into seperate modules.
